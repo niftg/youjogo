@@ -4,6 +4,8 @@
 
 [`youjogo.json`](https://raw.githubusercontent.com/yuhr/youjogo/master/youjogo.json) is the dictionary file in [OTM-JSON](http://ja.conlinguistics.wikia.com/wiki/OTM-JSON) format. You can use [ZpDIC](http://ziphil.web.fc2.com/application/download/2.html) to open it.
 
+（追記：にふ([niftg]("https://github.com/niftg"))のフォークリポジトリにおいて、粗末ながら単語をHTMLで表示するツールを作成・追加([`d.html`]("https://niftg.github.io/youjogo/d.html"))。）
+
 ## 君が代 (Kimigayo)
 
 > にーにの　ぜんぶようちえん  
