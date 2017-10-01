@@ -1,0 +1,179 @@
+<!doctype html>
+<title>Youjogo dictionary</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<h1>Youjogo dictionary</h1>
+
+<style>
+.part_of_speech{border-style:solid;border-width:1px;font-size:x-small;margin-right:0.5em;}
+.content_title,.variation_title,.relation_title{font-style:italic;font-size:small;}
+.example{background-color:mintcream;width:90%;margin-top:0em;}
+#result>dl>dt{font-weight:bold;background-color:aliceblue;}
+dd>ul{list-style-type:none;margin-left:0em;}
+dd{margin-left:0em;}
+</style>
+
+<script>
+window.youjogo_d = null;
+
+var entry_match_check = function(word,kw){
+  var judge = false;
+  if(kw==null){judge=true;
+  }else{
+    if(word.entry.form.match(kw)){judge=true;}
+    for(var i of word.translations){
+      if(i.title.match(kw)){judge=true;}
+      for(var j of i.forms){if(j.match(kw)){judge=true;}}
+    }
+    if(word.tags){for(var i of word.tags){if(i.match(kw)){judge=true;}}}
+    if(word.contents){for(var i of word.contents){if(i.title.match(kw)||i.text.match(kw)){judge=true;}}}
+    if(word.variations){for(var i of word.variations){if(i.title.match(kw)||i.form.match(kw)){judge=true;}}}
+  }
+  return judge;
+};
+
+var make_result = function(otmjson_obj, filter_kw){
+  var wordlist = document.createElement("dl");
+  for (var i of youjogo_d.words) {
+    if(!(entry_match_check(i,filter_kw))){continue;}
+    var entry_form = document.createElement("dt");
+    var entry_desc = document.createElement("dd");
+
+    entry_form.id = "entry_"+i.entry.id;
+    entry_form.textContent = i.entry.form;
+
+    var translist = document.createElement("ul");
+    translist.setAttribute("class","translations");
+    for(var j of i.translations){
+      var translist_item = document.createElement("li");
+      var trans_title = document.createElement("span");
+      var trans_forms = document.createTextNode("");
+      
+      trans_title.setAttribute("class","part_of_speech");
+      trans_title.textContent = j.title;
+      for(var k of j.forms){
+        trans_forms.textContent += k;
+        if(j.forms.length>1){trans_forms.textContent += ";";}
+      }
+      translist_item.appendChild(trans_title);
+      translist_item.appendChild(trans_forms);
+      translist.appendChild(translist_item);
+    }
+    entry_desc.appendChild(translist);
+
+    if(j.tags){
+      var tagstrs = document.createElement("p");
+      tagstrs.setAttribute("class","tags");
+      for(var j of i.tags){
+        tagstrs.textContent += j+";"
+      }
+      entry_desc.appendChild(tagstrs);
+      console.log("tags attached");
+    }
+
+    var contentlist = document.createElement("ul");
+    contentlist.setAttribute("class","contents");
+    for(var j of i.contents){
+      var contentlist_item = document.createElement("li");
+      var content_title = document.createElement("span");
+      var content_text ={};
+      if(j.title=="例文"){//例文だけ改行保持
+        content_text = document.createElement("pre");
+        content_text.setAttribute("class","example");
+      }else{
+        content_text = document.createTextNode("");
+      }
+      content_title.setAttribute("class","content_title");
+      content_title.textContent = j.title + ": ";
+      content_text.textContent  = j.text;
+      contentlist_item.appendChild(content_title);
+      contentlist_item.appendChild(content_text);
+      contentlist.appendChild(contentlist_item);
+    }
+    entry_desc.appendChild(contentlist);
+
+    var varilist = document.createElement("ul"); //contentlistとほぼ同パターン
+    varilist.setAttribute("class","variations");
+    for(var j of i.variations){
+      var varilist_item = document.createElement("li");
+      var vari_title = document.createElement("span");
+      var vari_form = document.createTextNode("");
+      
+      vari_title.setAttribute("class","variation_title");
+      vari_title.textContent = j.title + ": ";
+      vari_form.textContent  = j.form;
+      varilist_item.appendChild(vari_title);
+      varilist_item.appendChild(vari_form);
+      varilist.appendChild(varilist_item);
+    }
+    entry_desc.appendChild(varilist);
+
+    var rellist = document.createElement("ul"); //varilistからの派生的パターン
+    rellist.setAttribute("class","relations");
+    for(var j of i.relations){
+      var rellist_item = document.createElement("li");
+      var rel_title = document.createElement("span");
+      var rel_entry_form = document.createElement("a");
+      
+      rel_title.setAttribute("class","relation_title");
+      rel_title.textContent = j.title + ": ";
+      rel_entry_form.textContent  = j.entry.form;
+      rel_entry_form.setAttribute("href","#entry_"+j.entry.id);
+      rellist_item.appendChild(rel_title);
+      rellist_item.appendChild(rel_entry_form);
+      rellist.appendChild(rellist_item);
+    }
+    entry_desc.appendChild(rellist);
+
+    wordlist.appendChild(entry_form);
+    wordlist.appendChild(entry_desc);    
+  }
+  var result = document.getElementById("result");
+  result.innerHTML = "";
+  result.appendChild(wordlist);
+
+  document.getElementById("words_count").textContent =
+    wordlist.getElementsByTagName("dt").length + "/" + youjogo_d.words.length + " words shown";
+};
+
+var search_kw = function(){
+  var kw = document.getElementById("kw").value;
+  make_result(youjogo_d,kw);
+};
+var list_all = function(){
+  make_result(youjogo_d,null);
+};
+
+var init = function(){
+  document.getElementById("search_kw").addEventListener("click",search_kw,false);
+  document.getElementById("list_all").addEventListener("click",list_all,false);
+
+  document.getElementById("words_count").textContent = "loading...";
+
+  var xhr = new XMLHttpRequest;
+  xhr.addEventListener("load",function(){
+      youjogo_d = JSON.parse(xhr.responseText);
+      document.getElementById("words_count").textContent = youjogo_d.words.length+" words loaded";
+  });
+  xhr.open("GET","youjogo.json");
+  xhr.send()
+};
+window.addEventListener("load",init,false);
+</script>
+
+<form>
+  <ul>
+    <li>
+      <input id="kw"/>
+      <ul>
+        <li><input type="button" id="search_kw" value="search"/></li>
+      </ul>
+    </li>
+    <li><input type="button" id="list_all" value="list all"/></li>
+  </ul>
+  <input type="hidden"/>
+</form>
+
+<div id="words_count"></div>
+<div id="result"></div>
