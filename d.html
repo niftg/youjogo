@@ -19,18 +19,33 @@ dd{margin-left:0em;}
 <script>
 window.youjogo_d = null;
 
+var test_or_includes = function(str,maybe_regexp){
+  var result;
+  var use_regexp = document.getElementById("use_regexp").checked;
+
+  if(use_regexp){
+    var re = new RegExp(maybe_regexp);
+    result = re.test(str);
+  }else{
+    result = str.includes(maybe_regexp)
+  }
+  return result;
+};
+
 var entry_match_check = function(word,kw){
   var judge = false;
   if(kw==null){judge=true;
   }else{
-    if(word.entry.form.match(kw)){judge=true;}
+    if(test_or_includes(word.entry.form,kw)){judge=true;}
     for(var i of word.translations){
-      if(i.title.match(kw)){judge=true;}
-      for(var j of i.forms){if(j.match(kw)){judge=true;}}
+      if(test_or_includes(i.title,kw)){judge=true;}
+      for(var j of i.forms){if(test_or_includes(j,kw)){judge=true;}}
     }
-    if(word.tags){for(var i of word.tags){if(i.match(kw)){judge=true;}}}
-    if(word.contents){for(var i of word.contents){if(i.title.match(kw)||i.text.match(kw)){judge=true;}}}
-    if(word.variations){for(var i of word.variations){if(i.title.match(kw)||i.form.match(kw)){judge=true;}}}
+    if(word.tags){for(var i of word.tags){if(test_or_includes(i,kw)){judge=true;}}}
+    if(word.contents){for(var i of word.contents){
+      if(test_or_includes(i.title,kw)||test_or_includes(i.text,kw)){judge=true;}
+    }}
+    if(word.variations){for(var i of word.variations){if(test_or_includes(i.title,kw)||test_or_includes(i.form,kw)){judge=true;}}}
   }
   return judge;
 };
@@ -51,7 +66,7 @@ var make_result = function(otmjson_obj, filter_kw){
       var translist_item = document.createElement("li");
       var trans_title = document.createElement("span");
       var trans_forms = document.createTextNode("");
-      
+
       trans_title.setAttribute("class","part_of_speech");
       trans_title.textContent = j.title;
       for(var k of j.forms){
@@ -101,7 +116,7 @@ var make_result = function(otmjson_obj, filter_kw){
       var varilist_item = document.createElement("li");
       var vari_title = document.createElement("span");
       var vari_form = document.createTextNode("");
-      
+
       vari_title.setAttribute("class","variation_title");
       vari_title.textContent = j.title + ": ";
       vari_form.textContent  = j.form;
@@ -117,7 +132,7 @@ var make_result = function(otmjson_obj, filter_kw){
       var rellist_item = document.createElement("li");
       var rel_title = document.createElement("span");
       var rel_entry_form = document.createElement("a");
-      
+
       rel_title.setAttribute("class","relation_title");
       rel_title.textContent = j.title + ": ";
       rel_entry_form.textContent  = j.entry.form;
@@ -129,7 +144,7 @@ var make_result = function(otmjson_obj, filter_kw){
     entry_desc.appendChild(rellist);
 
     wordlist.appendChild(entry_form);
-    wordlist.appendChild(entry_desc);    
+    wordlist.appendChild(entry_desc);
   }
   var result = document.getElementById("result");
   result.innerHTML = "";
@@ -169,12 +184,16 @@ window.addEventListener("load",init,false);
     <li>
       <input id="kw"/>
       <ul>
+        <ul><li><input type="checkbox" id="use_regexp"/>regexp</li></ul>
         <li><input type="button" id="search_kw" value="search"/></li>
       </ul>
     </li>
     <li><input type="button" id="list_all" value="list all"/></li>
   </ul>
-  <input type="hidden"/>
+  <ul>
+    <li><input type="checkbox" id="sorted"/>sorted</li>
+  </ul>
+  <!--input type="hidden"/-->
 </form>
 
 <div id="words_count"></div>
