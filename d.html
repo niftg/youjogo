@@ -156,10 +156,17 @@ var make_result = function(otmjson_obj, filter_kw){
     wordlist.getElementsByTagName("dt").length + "/" + youjogo_d.words.length + " words shown";
 };
 
+var words_filter = function(otmjson_obj,filter_func,kw_as_this){
+  var words = otmjson_obj.words;
+  return words.filter(filter_func,kw_as_this);
+};
+
+var emc_ff = function(element){return entry_match_check(element,this)};
+
 var search_kw = function(){
   var kw = document.getElementById("kw").value;
   make_result(youjogo_d,kw);
-};
+};1
 var list_all = function(){
   make_result(youjogo_d,null);
 };
