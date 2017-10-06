@@ -14,6 +14,8 @@
 #result>dl>dt{font-weight:bold;background-color:aliceblue;}
 dd>ul{list-style-type:none;margin-left:0em;}
 dd{margin-left:0em;}
+li>p{margin-top:0em;margin-bottom:0em;}
+#filter_keys{display:none;} /* not ready */
 </style>
 
 <script>
@@ -52,7 +54,7 @@ var entry_match_check = function(word,kw){
 
 var make_result = function(otmjson_obj, filter_kw){
   var wordlist = document.createElement("dl");
-  for (var i of youjogo_d.words) {
+  for (var i of otmjson_obj.words) {
     if(!(entry_match_check(i,filter_kw))){continue;}
     var entry_form = document.createElement("dt");
     var entry_desc = document.createElement("dd");
@@ -168,6 +170,8 @@ var init = function(){
 
   document.getElementById("words_count").textContent = "loading...";
 
+  document.getElementById("f_in").onsubmit = function(){return false;};
+
   var xhr = new XMLHttpRequest;
   xhr.addEventListener("load",function(){
       youjogo_d = JSON.parse(xhr.responseText);
@@ -179,16 +183,18 @@ var init = function(){
 window.addEventListener("load",init,false);
 </script>
 
-<form>
+<form id="f_in">
   <ul>
-    <li>
-      <input id="kw"/>
-      <ul>
-        <ul><li><input type="checkbox" id="use_regexp"/>regexp</li></ul>
-        <li><input type="button" id="search_kw" value="search"/></li>
-      </ul>
-    </li>
     <li><input type="button" id="list_all" value="list all"/></li>
+    <li>
+      <p>filter:</p>
+      <input id="kw"/><input type="checkbox" id="use_regexp"/>regexp
+      <ul id="filter_keys">
+        <li><input type="checkbox" value="e_f"/><code>entry.form</code></li>
+        <li><input type="checkbox" value="t_f"/><code>&lt;translation&gt;.form</code></li>
+      </ul>
+      <input type="button" id="search_kw" value="search"/>
+    </li>
   </ul>
   <ul>
     <li><input type="checkbox" id="sorted"/>sorted</li>
