@@ -14,8 +14,11 @@
 #result>dl>dt{font-weight:bold;background-color:aliceblue;}
 dd>ul{list-style-type:none;margin-left:0em;}
 dd{margin-left:0em;}
+dd>dl{margin-left:1em;}
+dd>dl>dt{background-color:floralwhite;}
 li>p{margin-top:0em;margin-bottom:0em;}
 #filter_keys{display:none;} /* not ready */
+#sorted_inputs{display:none;} /* not ready */
 </style>
 
 <script>
@@ -34,14 +37,24 @@ var test_or_includes = function(str,maybe_regexp){
   return result;
 };
 
-var words_show = function(words){
+var id_fetch = function(el){
+  return (el.entry.id == this);
+};
+
+var words_show = function(words, result_id){
   var wordlist = document.createElement("dl");
+  var result = document.getElementById(result_id?result_id:"result");
+  if(result_id==null||result_id=="result"){
+    while(result.firstChild){result.removeChild(result.firstChild)};
+  }
+
   for (var i of words) {
     var entry_form = document.createElement("dt");
     var entry_desc = document.createElement("dd");
 
     entry_form.id = "entry_"+i.entry.id;
     entry_form.textContent = i.entry.form;
+    entry_desc.id = "entry_"+i.entry.id+"_d";
 
     var translist = document.createElement("ul");
     translist.setAttribute("class","translations");
@@ -120,6 +133,13 @@ var words_show = function(words){
       rel_title.textContent = j.title + ": ";
       rel_entry_form.textContent  = j.entry.form;
       rel_entry_form.setAttribute("href","#entry_"+j.entry.id);
+      rel_entry_form.onclick = function(){
+        var id = this.href.match(/#entry_(\d+)/)[1];
+        if(!document.getElementById("entry_"+id)){
+          var pid = this.parentElement.parentElement.parentElement.id;
+          words_show(words_filter(youjogo_d,id_fetch,id),pid);
+        }
+      };
       rellist_item.appendChild(rel_title);
       rellist_item.appendChild(rel_entry_form);
       rellist.appendChild(rellist_item);
@@ -129,12 +149,9 @@ var words_show = function(words){
     wordlist.appendChild(entry_form);
     wordlist.appendChild(entry_desc);
   }
-  var result = document.getElementById("result");
-  while(result.firstChild){result.removeChild(result.firstChild)};
   result.appendChild(wordlist);
-
   document.getElementById("words_count").textContent =
-    wordlist.getElementsByTagName("dt").length + "/" + youjogo_d.words.length + " words shown";
+    document.getElementsByTagName("dt").length + " of " + youjogo_d.words.length + " words shown";
 };
 
 var words_filter = function(otmjson_obj,filter_func,kw_as_this){
@@ -203,7 +220,7 @@ window.addEventListener("load",init,false);
       <input type="button" id="search_kw" value="search"/>
     </li>
   </ul>
-  <ul>
+  <ul id="sorted_inputs">
     <li><input type="checkbox" id="sorted"/>sorted</li>
   </ul>
   <!--input type="hidden"/-->
