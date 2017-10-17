@@ -17,8 +17,8 @@ dd{margin-left:0em;}
 dd>dl{margin-left:1em;}
 dd>dl>dt{background-color:floralwhite;}
 li>p{margin-top:0em;margin-bottom:0em;}
-#filter_keys{display:none;} /* not ready */
-#sorted_inputs{display:none;} /* not ready */
+#filter_keys>li{display:inline;}
+/*#sorted_inputs{display:none;} /* ready */
 </style>
 
 <script>
@@ -154,27 +154,57 @@ var words_show = function(words, result_id){
     document.getElementsByTagName("dt").length + " of " + youjogo_d.words.length + " words shown";
 };
 
+var word_search_filter_options = function(){
+  var fk = document.getElementById("filter_keys").getElementsByTagName("input");
+  var options = {};
+  for (var i=0;i<fk.length;i++) { // HTMLCollections don't seem iterable
+    Object.defineProperty(options,fk[i].value,{value:fk[i].checked});
+  }
+  return options;
+};
+
 var words_filter = function(otmjson_obj,filter_func,kw_as_this){
   var words = otmjson_obj.words;
-  return words.filter(filter_func,kw_as_this);
+  return words.filter(filter_func,kw_as_this).sort(
+    function(a,b){
+      if(document.querySelector("input[name='order_key'][value='e_i']").checked){
+        return a.entry.id - b.entry.id;
+      }else if(document.querySelector("input[name='order_key'][value='e_f']").checked){
+        return a.entry.form < b.entry.form ? -1 : 1;
+      }
+    }
+  );
 };
 
 var emc_ff = function(element){
 //  return entry_match_check(element,this)
   var word = element; var kw = this;
-  if(test_or_includes(word.entry.form,kw)){return true;}
-  for(var i of word.translations){
-    if(test_or_includes(i.title,kw)){return true;}
-    for(var j of i.forms){if(test_or_includes(j,kw)){return true;}}
+  var wsf = word_search_filter_options();
+  if(wsf.e_f&&test_or_includes(word.entry.form,kw)){return true;}
+  if(wsf.t_t||wsf.t_f){
+    for(var i of word.translations){
+      if(wsf.t_t&&test_or_includes(i.title,kw)){return true;}
+      if(wsf.t_f){for(var j of i.forms){
+        if(test_or_includes(j,kw)){return true;}
+      }}
     }
-  if(word.tags){for(var i of word.tags){
+  }
+  if(wsf.tg&&word.tags){for(var i of word.tags){
     if(test_or_includes(i,kw)){return true;}
   }}
-  if(word.contents){for(var i of word.contents){
-    if(test_or_includes(i.title,kw)||test_or_includes(i.text,kw)){return true;}
-    }}
-  if(word.variations){for(var i of word.variations){
-    if(test_or_includes(i.title,kw)||test_or_includes(i.form,kw)){return true;}
+  if((wsf.c_t||wsf.c_x)&&word.contents){for(var i of word.contents){
+    if(wsf.c_t&&test_or_includes(i.title,kw)
+    ||
+    wsf.c_x&&test_or_includes(i.text,kw)){
+      return true;
+    }
+  }}
+  if((wsf.v_t||wsf.v_f)&&word.variations){for(var i of word.variations){
+    if(wsf.v_t&&test_or_includes(i.title,kw)
+    ||
+    wsf.v_f&&test_or_includes(i.form,kw)){
+      return true;
+    }
   }}
   return false;
 };
@@ -214,14 +244,26 @@ window.addEventListener("load",init,false);
       <p>filter:</p>
       <input id="kw"/><input type="checkbox" id="use_regexp"/>regexp
       <ul id="filter_keys">
-        <li><input type="checkbox" value="e_f"/><code>entry.form</code></li>
-        <li><input type="checkbox" value="t_f"/><code>&lt;translation&gt;.form</code></li>
+        <li><input type="checkbox" value="e_f" checked/><code>.entry.form</code></li>
+        <!--li><input type="hidden" value="t_t"/><code>.translations[].title</code></li-->
+        <li><input type="checkbox" value="t_f"/><code>.translations[].form</code></li>
+        <!--li><input type="hidden" value="tg" disabled/><code>.tags[]</code></li-->
+        <!--li><input type="hidden" value="c_t"/><code>.contents[].title</code></li-->
+        <li><input type="checkbox" value="c_x"/><code>.contents[].text</code></li>
+        <!--li><input type="hidden" value="v_t"/><code>.variations[].title</code></li-->
+        <li><input type="checkbox" value="v_f"/><code>.variations[].form</code></li>
       </ul>
       <input type="button" id="search_kw" value="search"/>
     </li>
   </ul>
   <ul id="sorted_inputs">
-    <li><input type="checkbox" id="sorted"/>sorted</li>
+    <li>
+      <input type="checkbox" id="sorted" checked disabled/>sorted
+      <ul>
+        <li><input type="radio" name="order_key" value="e_i" checked/><code>.entry.id</code></li>
+        <li><input type="radio" name="order_key" value="e_f"/><code>.entry.form</code></li>
+      </ul>
+    </li>
   </ul>
   <!--input type="hidden"/-->
 </form>
