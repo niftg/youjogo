@@ -158,7 +158,7 @@ var word_search_filter_options = function(){
   var fk = document.getElementById("filter_keys").getElementsByTagName("input");
   var options = {};
   for (var i=0;i<fk.length;i++) { // HTMLCollections don't seem iterable
-    Object.defineProperty(options,fk[i].value,{value:fk[i].checked});
+    options[fk[i].value] = fk[i].checked;
   }
   return options;
 };
